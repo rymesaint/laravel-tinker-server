@@ -5,10 +5,10 @@ namespace BeyondCode\LaravelTinkerServer;
 use BeyondCode\LaravelTinkerServer\Shell\ExecutionClosure;
 use Clue\React\Stdio\Stdio;
 use Psy\Shell;
-use React\EventLoop\Factory;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
-use React\Socket\Server as SocketServer;
+use React\Socket\SocketServer;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 class Server
@@ -30,10 +30,11 @@ class Server
     /** @var Stdio */
     protected $stdio;
 
-    public function __construct($host, Shell $shell, BufferedOutput $output, LoopInterface $loop = null, Stdio $stdio = null)
+    public function __construct($host, Shell $shell, BufferedOutput $output, array $context = [], LoopInterface $loop = null, Stdio $stdio = null)
     {
         $this->host = $host;
-        $this->loop = $loop ?? Factory::create();
+        $this->context = $context;
+        $this->loop = $loop ?? Loop::get();
         $this->shell = $shell;
         $this->output = $output;
         $this->shellOutput = new BufferedOutput();
@@ -51,7 +52,7 @@ class Server
 
     protected function createSocketServer()
     {
-        $socket = new SocketServer($this->host, $this->loop);
+        $socket = new SocketServer($this->host, $this->context, $this->loop);
 
         $socket->on('connection', function (ConnectionInterface $connection) {
             $connection->on('data', function ($data) use ($connection) {
@@ -78,13 +79,12 @@ class Server
     {
         $stdio = new Stdio($this->loop);
 
-        $stdio->getReadline()->setPrompt('>> ');
+        $stdio->setPrompt('>> ');
 
         $stdio->on('data', function ($line) use ($stdio) {
             $line = rtrim($line, "\r\n");
 
-            $stdio->getReadline()->addHistory($line);
-
+            $stdio->addHistory($line);
             $this->executeCode($line);
 
             $this->output->write(PHP_EOL.$this->shellOutput->fetch());

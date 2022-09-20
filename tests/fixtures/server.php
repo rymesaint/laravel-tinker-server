@@ -11,7 +11,7 @@ $file = $componentRoot.'/vendor/autoload.php';
 
 require $file;
 
-$loop = \React\EventLoop\Factory::create();
+$loop = \React\EventLoop\Loop::get();
 
 $output = new BufferedOutput();
 
@@ -23,7 +23,9 @@ $stdio = new \Clue\React\Stdio\Stdio($loop, null, new EchoStream());
 
 $shell = new \Psy\Shell($config);
 
-$server = new Server(getenv('TINKER_SERVER_HOST'), $shell, $output, $loop, $stdio);
+$context = [];
+
+$server = new Server(getenv('TINKER_SERVER_HOST'), $shell, $output, $context, $loop, $stdio);
 
 echo "READY\n";
 

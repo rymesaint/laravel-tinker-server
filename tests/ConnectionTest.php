@@ -62,7 +62,7 @@ class ConnectionTest extends TestCase
             'TINKER_SERVER_HOST' => self::TINKER_SERVER_HOST,
         ]);
 
-        $process->inheritEnvironmentVariables(true);
+        // $process->inheritEnvironmentVariables(true);
 
         return $process->setTimeout(3);
     }
